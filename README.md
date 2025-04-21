@@ -1,4 +1,4 @@
-<h1 align="center">⚡ Serverless Function Platform (Lambda Clone)</h1>
+<h1 align="center">⚡ Serverless Function Platform </h1>
 
 <p align="center">
   A lightweight serverless computing platform that lets you upload, manage, and run Python and JavaScript functions inside Docker or gVisor sandboxes. Includes monitoring and metrics dashboard.
