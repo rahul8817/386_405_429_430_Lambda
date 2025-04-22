@@ -3,23 +3,27 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Setting the page layout and title
 st.set_page_config(page_title="Lambda Platform", layout="wide")
 
+# Main Title
 st.title("⚡ Serverless Function Platform (Lambda)")
 
+# Tabs for different sections
 tabs = st.tabs(["🚀 Upload Function", "📂 Manage Functions", "📊 Monitoring Dashboard"])
 
 # ---- Upload Function ----
 with tabs[0]:
     st.subheader("Upload a New Function")
-    st.write("Use this section to upload a new function to the platform.")
-
+    st.write("Upload a new function to the platform and run it in Docker or gVisor environment.")
+    
     # Form container for cleaner look
     with st.form("upload_form"):
+        # Form fields
         name = st.text_input("Function Name", help="Provide a unique name for your function.")
-        language = st.selectbox("Language", ["python", "javascript"], help="Choose the language for your function.")
-        timeout = st.number_input("Timeout (seconds)", value=5, min_value=1, help="Set a timeout for the function execution.")
-        code = st.text_area("Function Code", height=300, placeholder="Write your code here...", help="Enter the function's source code.")
+        language = st.selectbox("Language", ["python", "javascript"], help="Choose the programming language for your function.")
+        timeout = st.number_input("Timeout (seconds)", value=5, min_value=1, help="Set the function execution timeout.")
+        code = st.text_area("Function Code", height=300, placeholder="Enter your code here...", help="Write the function's code here.")
 
         upload_button = st.form_submit_button("Upload")
 
@@ -28,16 +32,17 @@ with tabs[0]:
                 result = upload_function(name, language, timeout, code)
                 st.success(f"Function Uploaded! ID: {result.get('function_id')}")
             else:
-                st.warning("Please provide both name and code.")
+                st.warning("Please provide both a name and function code.")
 
 # ---- Manage Functions ----
 with tabs[1]:
     st.subheader("Function Manager")
     st.write("View and manage your uploaded functions below.")
-
+    
+    # Fetching functions list
     functions = get_functions()
     
-    # Add language filter with improved instructions
+    # Language filter to display functions based on selected language
     selected_language = st.selectbox(
         "Filter by Language",
         ["All", "python", "javascript"],
@@ -52,26 +57,29 @@ with tabs[1]:
     if not filtered_functions:
         st.info(f"No {selected_language} functions found. Try uploading one!")
     
-    # Add a scroll bar if there are many functions
+    # Displaying filtered functions with additional options
     for func in filtered_functions:
         with st.expander(f"📌 {func[1]} ({func[2]})"):
             st.code(func[3], language=func[2])
 
             cols = st.columns(4)
             
+            # Selecting runtime environment
             runtime = cols[0].radio(
                 "Runtime",
                 ["Docker", "gVisor"],
                 horizontal=True,
                 key=f"runtime_{func[0]}",
-                help="Select the runtime environment."
+                help="Choose the runtime environment."
             )
             
+            # Run function button
             if cols[0].button("▶ Run", key=f"run_{func[0]}"):
                 use_gvisor = runtime == "gVisor"
                 res = run_function(func[0], use_gvisor=use_gvisor)
                 st.write(res)
 
+            # Edit function code
             if cols[1].button("📝 Edit Code", key=f"edit_{func[0]}"):
                 st.session_state[f"editing_{func[0]}"] = True
 
@@ -88,11 +96,13 @@ with tabs[1]:
                     else:
                         st.error("Failed to update code")
 
+            # Delete function
             if cols[2].button("🗑 Delete", key=f"delete_{func[0]}"):
                 response = delete_function(func[0])
                 st.warning(response)
                 st.rerun()
 
+            # View logs
             if cols[3].button("📄 Logs", key=f"logs_{func[0]}"):
                 logs = get_logs(func[0])
                 st.json(logs)
@@ -100,8 +110,9 @@ with tabs[1]:
 # ---- Monitoring ----
 with tabs[2]:
     st.subheader("Function Performance Dashboard")
-    st.write("Monitor the performance of your uploaded functions.")
-
+    st.write("Monitor the performance and resource utilization of your uploaded functions.")
+    
+    # Fetching list of functions to monitor
     functions = get_functions()
     
     if not functions:
