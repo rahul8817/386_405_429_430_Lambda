@@ -18,14 +18,21 @@ def get_functions():
 
 def run_function(function_id, use_gvisor=False):
     data = {"use_gvisor": str(use_gvisor).lower()}
-    res = requests.post(f"{BASE_URL}/functions/{function_id}/run", json=data)
-    
     try:
+        res = requests.post(f"{BASE_URL}/functions/{function_id}/run", json=data)
+        print("Request sent to:", f"{BASE_URL}/functions/{function_id}/run")
+        print("Status Code:", res.status_code)
+        print("Response Text:", res.text)
         return res.json()
     except requests.exceptions.JSONDecodeError:
-        print("Failed to parse JSON. Status:", res.status_code)
-        print("Response Text:", res.text)
-        raise
+        print("❌ Failed to parse JSON response.")
+        print("⚠️ Full response text:")
+        print(res.text)
+        return {"error": "Invalid JSON response from server"}
+    except Exception as e:
+        print("💥 Other exception:", e)
+        return {"error": str(e)}
+
 
 
 def delete_function(function_id):
